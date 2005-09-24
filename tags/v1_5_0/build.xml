@@ -1,0 +1,188 @@
+<project name="quartz" default="jar" basedir=".">
+
+	<!-- overridden properties (must be before the import!) -->
+
+    <property name="docs.packages" value="org.quartz.*"/>
+    <property name="jar.excludes" value="**/jboss/**,**/oracle/**,**/weblogic/**" />
+    <property name="jar.includes.jboss" value="**/jboss/**" />
+    <property name="jar.includes.oracle" value="**/oracle/**" />
+    <property name="jar.excludes.oracle" value="**/weblogic/**" />
+    <property name="jar.includes.weblogic" value="**/weblogic/**,**/WebLogic*" />
+	
+    <property name="skip.tests" value="true"/>
+	
+    <property name="common.build" value="../opensymphony/common/osbuild.xml"/>
+
+	<import file="${common.build}"/>
+
+
+	<property name="src.jboss" value="${src}/jboss"/>
+	<property name="src.oracle" value="${src}/oracle"/>
+	<property name="src.weblogic" value="${src}/weblogic"/>
+		
+		
+    <available property="oracle.present" classname="oracle.sql.BLOB" classpathref="cp"/>
+    <available property="weblogic.present" classname="weblogic.logging.NonCatalogLogger" classpathref="cp"/>
+  	<available property="jboss.present" classname="org.jboss.system.ServiceMBeanSupport" classpathref="cp"/>
+
+    <condition property="skip.compile.features.jboss">
+      <not>
+        <isset property="jboss.present" />
+      </not>
+    </condition>
+    <condition property="skip.compile.features.oracle">
+      <not>
+        <isset property="oracle.present" />
+      </not>
+    </condition>
+    <condition property="skip.compile.features.weblogic">
+      <not>
+        <isset property="weblogic.present" />
+      </not>
+    </condition>
+	
+    <!-- overridden targets -->
+
+    <target name="clean" depends="common.clean">
+    	
+        <subant target="clean" buildpath="${basedir}" antfile="examples/build.xml" inheritall="false" inheritrefs="false" />
+
+    </target>
+
+    <target name="compile" depends="common.compile">
+
+      <copy filtering="no" todir="${build.java}" file="build.properties"/>
+    	
+	  <antcall target="compile.features.jboss" />
+	  <antcall target="compile.features.oracle" />
+	  <antcall target="compile.features.weblogic" />
+
+	</target>
+    
+    <target name="compile.features.jboss" unless="skip.compile.features.jboss">
+        <javac srcdir="${src.jboss}" destdir="${build.java}" classpathref="cp" debug="on" source="${compile.version}" target="${compile.version}" />
+        <copy filtering="no" todir="${build.java}">
+            <fileset dir="${src.jboss}">
+                <exclude name="**/*.java"/>
+                <exclude name="**/package.html"/>
+            </fileset>
+        </copy>
+	</target>
+
+    <target name="compile.features.oracle" unless="skip.compile.features.oracle">
+        <javac srcdir="${src.oracle}" destdir="${build.java}" classpathref="cp" debug="on" source="${compile.version}" target="${compile.version}" />
+        <copy filtering="no" todir="${build.java}">
+            <fileset dir="${src.oracle}">
+                <exclude name="**/*.java"/>
+                <exclude name="**/package.html"/>
+            </fileset>
+        </copy>
+	</target>
+
+    <target name="compile.features.weblogic" unless="skip.compile.features.weblogic">
+        <javac srcdir="${src.weblogic}" destdir="${build.java}" classpathref="cp" debug="on" source="${compile.version}" target="${compile.version}" />
+        <copy filtering="no" todir="${build.java}">
+            <fileset dir="${src.weblogic}">
+                <exclude name="**/*.java"/>
+                <exclude name="**/package.html"/>
+            </fileset>
+        </copy>
+	</target>
+	
+    <target name="jar" depends="common.jar">
+
+	  <antcall target="jar.features.jboss" />
+      <antcall target="jar.features.oracle" />
+	  <antcall target="jar.features.weblogic" />
+
+    </target>
+
+    <target name="jar.features.jboss"  unless="skip.compile.features.jboss" >
+
+        <jar basedir="${build.java}" includes="${jar.includes.jboss}" jarfile="${build}/${name}-jboss-${version}.jar" manifest="${jar.manifest}">
+            <manifest>
+                <attribute name="Implementation-Title" value="${fullname} JBoss Features" />
+                <attribute name="Implementation-Version" value="${version}" />
+                <attribute name="Implementation-Vendor" value="OpenSymphony" />
+            </manifest>
+        </jar>
+<!--    	
+        <jar basedir="${src.jboss}" jarfile="${build}/${name}-jboss-${version}-src.jar">
+            <manifest>
+                <attribute name="Implementation-Title" value="${fullname} JBoss Features" />
+                <attribute name="Implementation-Version" value="${version}" />
+                <attribute name="Implementation-Vendor" value="OpenSymphony" />
+            </manifest>
+        </jar>
+-->        
+    </target>
+
+    <target name="jar.features.oracle"  unless="skip.compile.features.oracle" >
+
+        <jar basedir="${build.java}" includes="${jar.includes.oracle}" excludes="${jar.excludes.oracle}" jarfile="${build}/${name}-oracle-${version}.jar" manifest="${jar.manifest}">
+            <manifest>
+                <attribute name="Implementation-Title" value="${fullname} Oracle Features" />
+                <attribute name="Implementation-Version" value="${version}" />
+                <attribute name="Implementation-Vendor" value="OpenSymphony" />
+            </manifest>
+        </jar>
+<!--		    	
+        <jar basedir="${src.oracle}" jarfile="${build}/${name}-oracle-${version}-src.jar">
+            <manifest>
+                <attribute name="Implementation-Title" value="${fullname} Oracle Features" />
+                <attribute name="Implementation-Version" value="${version}" />
+                <attribute name="Implementation-Vendor" value="OpenSymphony" />
+            </manifest>
+        </jar>
+-->        
+    </target>
+
+    <target name="jar.features.weblogic"  unless="skip.compile.features.weblogic" >
+
+        <jar basedir="${build.java}" includes="${jar.includes.weblogic}" jarfile="${build}/${name}-weblogic-${version}.jar" manifest="${jar.manifest}">
+            <manifest>
+                <attribute name="Implementation-Title" value="${fullname} Weblogic Features" />
+                <attribute name="Implementation-Version" value="${version}" />
+                <attribute name="Implementation-Vendor" value="OpenSymphony" />
+            </manifest>
+        </jar>
+<!--    	
+        <jar basedir="${src.weblogic}" jarfile="${build}/${name}-weblogic-${version}-src.jar">
+            <manifest>
+                <attribute name="Implementation-Title" value="${fullname} Weblogic Features" />
+                <attribute name="Implementation-Version" value="${version}" />
+                <attribute name="Implementation-Vendor" value="OpenSymphony" />
+            </manifest>
+        </jar>
+-->        
+    </target>
+
+    <target name="predist" depends="common.predist">
+<!--
+    	<copy file="${build}/${name}-jboss-${version}.jar" todir="${dist}"/>
+    	<copy file="${build}/${name}-oracle-${version}.jar" todir="${dist}"/>
+    	<copy file="${build}/${name}-weblogic-${version}.jar" todir="${dist}"/>
+-->    	
+    </target>
+	
+    <target name="predist.zip" depends="common.predist.zip">
+
+    	<mkdir dir="${dist}/docs/xml" />
+    	<copy todir="${dist}/docs/xml" flatten="true">
+            <fileset dir="${src}" includes="**/*.dtd,**/*.xsd"/>
+        </copy>
+    	
+   	    <subant target="dist" buildpath="${basedir}" antfile="examples/build.xml" inheritall="false" inheritrefs="false" />
+
+    	<mkdir dir="${dist}/examples" />
+    	<copy todir="${dist}/examples">
+            <fileset dir="examples/dist"/>
+        </copy>
+
+    	<copy todir="${dist}">
+            <fileset file="${common.build}" />
+        </copy>
+    	
+    </target>
+	
+</project>
