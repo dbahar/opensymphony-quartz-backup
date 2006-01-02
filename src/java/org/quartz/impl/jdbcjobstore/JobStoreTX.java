@@ -20,10 +20,6 @@
  */
 package org.quartz.impl.jdbcjobstore;
 
-import java.sql.Connection;
-import java.util.List;
-import java.util.Set;
-
 import org.quartz.Calendar;
 import org.quartz.JobDetail;
 import org.quartz.JobPersistenceException;
@@ -35,6 +31,10 @@ import org.quartz.core.SchedulingContext;
 import org.quartz.spi.ClassLoadHelper;
 import org.quartz.spi.SchedulerSignaler;
 import org.quartz.spi.TriggerFiredBundle;
+
+import java.sql.Connection;
+import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -1164,7 +1164,7 @@ public class JobStoreTX extends JobStoreSupport {
      * 
      * @see #releaseAcquiredTrigger(SchedulingContext, Trigger)
      */
-    public List acquireNextTriggers(SchedulingContext ctxt, long noLaterThan, int count)
+    public Trigger acquireNextTrigger(SchedulingContext ctxt, long noLaterThan)
             throws JobPersistenceException {
         Connection conn = getConnection();
         boolean transOwner = false;
@@ -1173,9 +1173,9 @@ public class JobStoreTX extends JobStoreSupport {
             transOwner = true;
             //getLockHandler().obtainLock(conn, LOCK_JOB_ACCESS);
 
-            List triggers = acquireNextTriggers(conn, ctxt, noLaterThan, count);
+            Trigger trigger = acquireNextTrigger(conn, ctxt, noLaterThan);
             commitConnection(conn);
-            return triggers;
+            return trigger;
         } catch (JobPersistenceException e) {
             rollbackConnection(conn);
             throw e;

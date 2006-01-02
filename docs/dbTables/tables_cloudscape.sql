@@ -38,7 +38,6 @@ create table qrtz_triggers(
 	description varchar(120) ,
 	next_fire_time longint,
 	prev_fire_time longint,
-	priority_time longint,
 	trigger_state varchar(16) not null,
 	trigger_type varchar(8) not null,
 	start_time longint not null,
@@ -104,7 +103,6 @@ create table qrtz_fired_triggers(
 	is_volatile varchar(5) not null,
 	instance_name varchar(80) not null,
 	fired_time longint not null,
-	priority_time longint not null,
 	state varchar(16) not null,
 	job_name varchar(80) null,
 	job_group varchar(80) null,
@@ -133,3 +131,4 @@ insert into qrtz_locks values('JOB_ACCESS');
 insert into qrtz_locks values('CALENDAR_ACCESS');
 insert into qrtz_locks values('STATE_ACCESS');
 insert into qrtz_locks values('MISFIRE_ACCESS');
+
