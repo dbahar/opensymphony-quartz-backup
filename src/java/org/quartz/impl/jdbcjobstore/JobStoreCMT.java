@@ -1162,7 +1162,7 @@ public class JobStoreCMT extends JobStoreSupport {
      * 
      * @see #releaseAcquiredTrigger(SchedulingContext, Trigger)
      */
-    public List acquireNextTriggers(SchedulingContext ctxt, long noLaterThan, int count)
+    public Trigger acquireNextTrigger(SchedulingContext ctxt, long noLaterThan)
             throws JobPersistenceException {
         Connection conn = null;
         boolean transOwner = false;
@@ -1174,10 +1174,10 @@ public class JobStoreCMT extends JobStoreSupport {
             transOwner = true;
             //getLockHandler().obtainLock(conn, LOCK_JOB_ACCESS);
 
-            List triggers = acquireNextTriggers(conn, ctxt, noLaterThan, count);
+            Trigger trigger = acquireNextTrigger(conn, ctxt, noLaterThan);
 
             conn.commit();
-            return triggers;
+            return trigger;
         } catch (JobPersistenceException e) {
             rollbackConnection(conn);
             throw e;
@@ -1394,9 +1394,8 @@ public class JobStoreCMT extends JobStoreSupport {
                     clusterRecover(conn, failedRecords);
                     recovered = true;
                 }
-    
-                conn.commit();
             }
+            conn.commit();
         } catch (JobPersistenceException e) {
             rollbackConnection(conn);
             throw e;
@@ -1405,15 +1404,15 @@ public class JobStoreCMT extends JobStoreSupport {
             throw new JobPersistenceException("TX failure: " + e.getMessage(),
                     e);
         } finally {
-            try {
-                releaseLock(conn, LOCK_TRIGGER_ACCESS, transOwner);
-            } finally {
-                try {
-                    releaseLock(conn, LOCK_STATE_ACCESS, transStateOwner);
-                } finally {
-                    closeConnection(conn);
-                }
-            }
+        	try {
+        		releaseLock(conn, LOCK_TRIGGER_ACCESS, transOwner);
+        	} finally {
+            	try {
+            		releaseLock(conn, LOCK_STATE_ACCESS, transStateOwner);
+            	} finally {
+            		closeConnection(conn);
+            	}
+        	}
         }
 
         firstCheckIn = false;
@@ -1428,52 +1427,43 @@ public class JobStoreCMT extends JobStoreSupport {
 
     protected Connection getNonManagedTXConnection()
             throws JobPersistenceException {
-        Connection conn = null;
         try {
-            conn = DBConnectionManager.getInstance().getConnection(
+            Connection conn = DBConnectionManager.getInstance().getConnection(
                     getNonManagedTXDataSource());
+
+            if (conn == null) { throw new SQLException(
+                    "Could not get connection from DataSource '"
+                            + getNonManagedTXDataSource() + "'"); }
+
+            try {
+	            if (!isDontSetNonManagedTXConnectionAutoCommitFalse())
+	                    conn.setAutoCommit(false);
+	
+	            if (isTxIsolationLevelReadCommitted())
+	                conn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
+            } catch (SQLException ingore) {
+            } catch (Exception e) {
+            	if(conn != null)
+            		try { conn.close(); } catch(Throwable tt) {}
+            		throw new JobPersistenceException(
+            				"Failure setting up connection.", e);
+            }
+
+            return conn;
         } catch (SQLException sqle) {
             throw new JobPersistenceException(
-                "Failed to obtain DB connection from data source '"
-                        + getNonManagedTXDataSource() + "': "
-                        + sqle.toString(), sqle);
-        } catch (Throwable e) {
+                    "Failed to obtain DB connection from data source '"
+                            + getNonManagedTXDataSource() + "': "
+                            + sqle.toString(), sqle);
+        } catch (Exception e) {
             throw new JobPersistenceException(
-                "Failed to obtain DB connection from data source '"
-                        + getNonManagedTXDataSource() + "': "
-                        + e.toString(), e,
-                JobPersistenceException.ERR_PERSISTENCE_CRITICAL_FAILURE);
+                    "Failed to obtain DB connection from data source '"
+                            + getNonManagedTXDataSource() + "': "
+                            + e.toString(), e,
+                    JobPersistenceException.ERR_PERSISTENCE_CRITICAL_FAILURE);
         }
-
-        if (conn == null) { 
-            throw new JobPersistenceException(
-                "Could not get connection from DataSource '"
-                        + getNonManagedTXDataSource() + "'"); 
-        }
-
-        // Wrap connection such that attributes that might be set will be
-        // restored before the connection is closed (and potentially restored 
-        // to a pool).
-        conn = new AttributeRestoringConnectionWrapper(conn);
-        
-        // Set any connection connection attributes we are to override.
-        try {
-            if (!isDontSetNonManagedTXConnectionAutoCommitFalse())
-                conn.setAutoCommit(false);
-            
-            if (isTxIsolationLevelReadCommitted())
-                conn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
-        } catch (SQLException sqle) {
-            getLog().warn("Failed to override connection auto commit/transaction isolation.", sqle);
-        } catch (Throwable e) {
-            try { conn.close(); } catch(Throwable tt) {}
-            
-            throw new JobPersistenceException(
-                "Failure setting up connection.", e);
-        }
-        
-        return conn;
     }
+
 }
 
 // EOF

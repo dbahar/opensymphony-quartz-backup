@@ -318,7 +318,7 @@ public class JobSchedulingDataProcessor extends DefaultHandler {
     /**
      * Initializes the digester for XML Schema validation.
      * 
-     * @param validatingSchema    whether or not to validate XML.
+     * @param validating    whether or not to validate XML.
      */
     protected void initSchemaValidation(boolean validatingSchema) {
         if (validatingSchema) {
@@ -801,7 +801,7 @@ public class JobSchedulingDataProcessor extends DefaultHandler {
      * 
      * Receive notification of a warning.
      * 
-     * @param e
+     * @param exception
      *          The error information encapsulated in a SAX parse exception.
      * @exception SAXException
      *              Any SAX exception, possibly wrapping another exception.
@@ -815,7 +815,7 @@ public class JobSchedulingDataProcessor extends DefaultHandler {
      * 
      * Receive notification of a recoverable error.
      * 
-     * @param e
+     * @param exception
      *          The error information encapsulated in a SAX parse exception.
      * @exception SAXException
      *              Any SAX exception, possibly wrapping another exception.
@@ -829,7 +829,7 @@ public class JobSchedulingDataProcessor extends DefaultHandler {
      * 
      * Receive notification of a non-recoverable error.
      * 
-     * @param e
+     * @param exception
      *          The error information encapsulated in a SAX parse exception.
      * @exception SAXException
      *              Any SAX exception, possibly wrapping another exception.
@@ -841,7 +841,7 @@ public class JobSchedulingDataProcessor extends DefaultHandler {
     /**
      * Adds a detected validation exception.
      * 
-     * @param e
+     * @param SAXException
      *          SAX exception.
      */
     protected void addValidationException(SAXException e) {
@@ -1030,12 +1030,10 @@ public class JobSchedulingDataProcessor extends DefaultHandler {
     /**
      * This rule translates the trigger misfire instruction constant name into its
      * corresponding value.
-     *
-     * <p>
-     * TODO Consider removing this class and using a
+     * 
+     * @TODO Consider removing this class and using a
      * <code>org.apache.commons.digester.Substitutor</code> strategy once
-     * Jakarta Commons Digester 1.6 is final.
-     * </p>  
+     * Jakarta Commons Digester 1.6 is final.  
      * 
      * @author <a href="mailto:bonhamcm@thirdeyeconsulting.com">Chris Bonham</a>
      */

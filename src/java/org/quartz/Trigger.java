@@ -243,8 +243,6 @@ public abstract class Trigger implements java.io.Serializable, Cloneable,
 
     private LinkedList triggerListeners = new LinkedList();
 
-    private long priorityMillis = 0L;
-
     /*
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      * 
@@ -252,8 +250,6 @@ public abstract class Trigger implements java.io.Serializable, Cloneable,
      * 
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      */
-
-    
 
     /**
      * <p>
@@ -413,7 +409,7 @@ public abstract class Trigger implements java.io.Serializable, Cloneable,
      * group.
      * </p>
      * 
-     * @param jobGroup if <code>null</code>, Scheduler.DEFAULT_GROUP will be used.
+     * @param group if <code>null</code>, Scheduler.DEFAULT_GROUP will be used.
      * 
      * @exception IllegalArgumentException
      *              if group is an empty string.
@@ -551,89 +547,6 @@ public abstract class Trigger implements java.io.Serializable, Cloneable,
      */
     public boolean isVolatile() {
         return volatility;
-    }
-
-    /**
-     * <p>
-     * The difference of <code>getNextFireTime()</code> and <code>getPriorityTime()</code>
-     * in milliseconds
-     * </p>
-     * 
-     * <p>
-     * If not explicitly set, the default value is <code>0</code>.
-     * </p>
-     * 
-     * @return the time difference
-     */
-    public long getPriorityMillis()
-    {
-      return priorityMillis;
-    }
-    
-
-    /**
-     * <p>
-     * Sets the difference of <code>getNextFireTime()</code> and <code>getPriorityTime()</code>
-     * in milliseconds
-     * </p>
-     * 
-     * <p>
-     * If not explicitly set, the default value is <code>0</code>.
-     * </p>
-     */
-    public void setPriorityMillis(long priorityMillis)
-    {
-      this.priorityMillis = priorityMillis;
-    }
-
-    /**
-     * <p>
-     * The time (maybe different from <code>getNextFireTime()</code>)
-     * used for sorting waiting triggers (whose firing time has already
-     * arrived) in the execution queue 
-     * </p>
-     * 
-     * <p>
-     * If not set (either implicitly via <code>setPriorityMillis()</code> 
-     * or explicitly, the default value is the same as <code>getNextFireTime()</code>.
-     * The result is <code>null</code> when <code>getNextFireTime()</code> is <code>null</code>
-     * </p>
-     * 
-     */
-    public Date getPriorityTime()
-    {
-      Date fireTime = getNextFireTime();
-      if (fireTime != null)
-      {
-        return new Date(fireTime.getTime()-priorityMillis);
-      }
-      return null;
-    }
-    
-
-    /**
-     * <p>
-     * The time (maybe different from <code>getNextFireTime()</code>)
-     * used for sorting waiting triggers (whose firing time has already
-     * arrived) in the execution queue 
-     * </p>
-     * 
-     * <p>
-     * value <code>null</code> sets <code>priorityMillis</code> to <code>0</code>.
-     * When <code>getNextFireTime()</code> is <code>null</code>, setting to values
-     * different from <code>null</code> has no effect.
-     * </p>
-     */
-    public void setPriorityTime(Date priorityTime)
-    {      
-      if (priorityTime != null)
-      {
-        Date fireTime = getNextFireTime();
-        if (fireTime != null)
-          priorityMillis = fireTime.getTime()-priorityTime.getTime();        
-      }
-      else
-        priorityMillis = 0;
     }
 
     /**

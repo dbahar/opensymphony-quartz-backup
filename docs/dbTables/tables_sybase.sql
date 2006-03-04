@@ -128,7 +128,6 @@ TRIGGER_GROUP varchar(80) not null,
 IS_VOLATILE bit not null,
 INSTANCE_NAME varchar(80) not null,
 FIRED_TIME numeric(13,0) not null,
-PRIORITY_TIME numeric(13,0) not null,
 STATE varchar(16) not null,
 JOB_NAME varchar(80) null,
 JOB_GROUP varchar(80) null,
@@ -141,6 +140,7 @@ create table QRTZ_SCHEDULER_STATE (
 INSTANCE_NAME varchar(80) not null,
 LAST_CHECKIN_TIME numeric(13,0) not null,
 CHECKIN_INTERVAL numeric(13,0) not null,
+RECOVERER varchar(80) null,
 )
 go
 
@@ -211,7 +211,6 @@ IS_VOLATILE bit not null,
 DESCRIPTION varchar(120) null,
 NEXT_FIRE_TIME numeric(13,0) null,
 PREV_FIRE_TIME numeric(13,0) null,
-PRIORITY_TIME numeric(13,0) null,
 TRIGGER_STATE varchar(16) not null,
 TRIGGER_TYPE varchar(8) not null,
 START_TIME numeric(13,0) not null,

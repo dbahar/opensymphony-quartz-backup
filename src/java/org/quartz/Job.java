@@ -70,6 +70,7 @@ public interface Job {
      * execution.
      * </p>
      * 
+     * @return void (nothing) if job is successful.
      * @throws JobExecutionException
      *           if there is an exception while executing the job.
      */

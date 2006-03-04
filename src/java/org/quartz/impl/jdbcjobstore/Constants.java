@@ -105,8 +105,6 @@ public interface Constants {
 
     public static final String COL_END_TIME = "END_TIME";
 
-    public static final String COL_PRIORITY_TIME = "PRIORITY_TIME";
-
     public static final String COL_MISFIRE_INSTRUCTION = "MISFIRE_INSTR";
 
     public static final String ALIAS_COL_NEXT_FIRE_TIME = "ALIAS_NXT_FR_TM";
@@ -150,6 +148,8 @@ public interface Constants {
     public static final String COL_LAST_CHECKIN_TIME = "LAST_CHECKIN_TIME";
 
     public static final String COL_CHECKIN_INTERVAL = "CHECKIN_INTERVAL";
+
+    public static final String COL_RECOVERER = "RECOVERER";
 
     // MISC CONSTANTS
     public static final String DEFAULT_TABLE_PREFIX = "QRTZ_";

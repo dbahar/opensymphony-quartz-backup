@@ -55,6 +55,8 @@ public class JTAJobRunShellFactory implements JobRunShellFactory {
 
     private SchedulingContext schedCtxt;
 
+    private UserTransactionHelper userTxHelper;
+
     /*
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      * 
@@ -63,7 +65,8 @@ public class JTAJobRunShellFactory implements JobRunShellFactory {
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      */
 
-    public JTAJobRunShellFactory() {
+    public JTAJobRunShellFactory(UserTransactionHelper userTxHelper) {
+        this.userTxHelper = userTxHelper;
     }
 
     /*
@@ -97,7 +100,7 @@ public class JTAJobRunShellFactory implements JobRunShellFactory {
      * </p>
      */
     public JobRunShell borrowJobRunShell() {
-        return new JTAJobRunShell(this, scheduler, schedCtxt);
+        return new JTAJobRunShell(this, scheduler, schedCtxt, userTxHelper);
     }
 
     /**

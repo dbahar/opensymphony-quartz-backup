@@ -43,6 +43,8 @@ public class SchedulerStateRecord implements java.io.Serializable {
 
     private long checkinInterval;
 
+    private String recoverer;
+
     /*
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      * 
@@ -65,6 +67,12 @@ public class SchedulerStateRecord implements java.io.Serializable {
 
     /**
      */
+    public String getRecoverer() {
+        return recoverer;
+    }
+
+    /**
+     */
     public String getSchedulerInstanceId() {
         return schedulerInstanceId;
     }
@@ -79,6 +87,12 @@ public class SchedulerStateRecord implements java.io.Serializable {
      */
     public void setCheckinTimestamp(long l) {
         checkinTimestamp = l;
+    }
+
+    /**
+     */
+    public void setRecoverer(String string) {
+        recoverer = string;
     }
 
     /**

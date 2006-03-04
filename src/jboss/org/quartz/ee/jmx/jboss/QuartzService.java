@@ -34,7 +34,6 @@ import javax.naming.NamingException;
 
 import org.quartz.Scheduler;
 import org.quartz.SchedulerConfigException;
-import org.quartz.SchedulerException;
 import org.quartz.impl.StdSchedulerFactory;
 
 import org.jboss.naming.NonSerializableFactory;
@@ -114,7 +113,7 @@ public class QuartzService extends ServiceMBeanSupport implements
             try {
                 rebind();
             } catch (NamingException ne) {
-                log.error("Failed to rebind Scheduler", ne);
+                log.error(captureStackTrace(ne));
 
                 throw new SchedulerConfigException(
                         "Failed to rebind Scheduler - ", ne);
@@ -205,7 +204,7 @@ public class QuartzService extends ServiceMBeanSupport implements
                 schedulerFactory.initialize(propertiesFile);
             }
         } catch (Exception e) {
-            log.error("Failed to initialize Scheduler", e);
+            log.error(captureStackTrace(e));
 
             throw new SchedulerConfigException(
                     "Failed to initialize Scheduler - ", e);
@@ -228,7 +227,7 @@ public class QuartzService extends ServiceMBeanSupport implements
         try {
             rebind();
         } catch (NamingException ne) {
-            log.error("Failed to rebind Scheduler", ne);
+            log.error(captureStackTrace(ne));
 
             throw new SchedulerConfigException("Failed to rebind Scheduler - ",
                     ne);
@@ -239,7 +238,7 @@ public class QuartzService extends ServiceMBeanSupport implements
 
             scheduler.start();
         } catch (Exception e) {
-            log.error("Failed to start Scheduler", e);
+            log.error(captureStackTrace(e));
 
             throw new SchedulerConfigException("Failed to start Scheduler - ",
                     e);
@@ -256,10 +255,10 @@ public class QuartzService extends ServiceMBeanSupport implements
 
             scheduler.shutdown();
         } catch (Exception e) {
-            log.error("Failed to shutdown Scheduler", e);
+            log.error(captureStackTrace(e));
 
             throw new SchedulerConfigException(
-                    "Failed to shutdown Scheduler - ", e);
+                    "Failed to shutdown Scheduler - ");
         }
 
         unbind(jndiName);
@@ -267,36 +266,32 @@ public class QuartzService extends ServiceMBeanSupport implements
         log.info("QuartzService(" + jndiName + ") stopped.");
     }
 
-     private void rebind() throws NamingException, SchedulerException {
-         InitialContext rootCtx = null;
-         try {
-             rootCtx = new InitialContext();
-             Name fullName = rootCtx.getNameParser("").parse(jndiName);
-             Scheduler scheduler = schedulerFactory.getScheduler();
-             NonSerializableFactory.rebind(fullName, scheduler, true);
-         } finally {
-             if (rootCtx != null) { 
-                 try { 
-                     rootCtx.close(); 
-                 } catch (NamingException ignore) {} 
-             }
-         }
+    private String captureStackTrace(Throwable throwable) {
+        StringWriter sw = new StringWriter();
+        throwable.printStackTrace(new PrintWriter(sw, true));
+
+        return sw.toString();
+    }
+
+     private void rebind() throws Exception
+     {
+         InitialContext rootCtx = new InitialContext();
+         Name fullName = rootCtx.getNameParser("").parse(jndiName);
+         Scheduler scheduler = schedulerFactory.getScheduler();
+         NonSerializableFactory.rebind(fullName, scheduler, true);
      }
     
-     private void unbind(String jndiName) {
-         InitialContext rootCtx = null;
-         try {
-             rootCtx = new InitialContext();
+     private void unbind(String jndiName)
+     {
+         try
+         {
+             InitialContext rootCtx = new InitialContext();
              rootCtx.unbind(jndiName);
              NonSerializableFactory.unbind(jndiName);
-         } catch (NamingException e) {
-             log.warn("Failed to unbind scheduler with jndiName: " + jndiName, e); 
-         } finally {
-             if (rootCtx != null) { 
-                 try { 
-                     rootCtx.close(); 
-                 } catch (NamingException ignore) {} 
-             }
+         }
+         catch (NamingException e)
+         {
+             e.printStackTrace();
          }
      }
 }

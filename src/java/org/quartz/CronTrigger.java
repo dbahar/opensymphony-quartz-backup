@@ -380,10 +380,10 @@ public class CronTrigger extends Trigger {
      *          of the <code>Trigger</code>
      * @param group
      *          of the <code>Trigger</code>
-     * @param jobName
+     * @param jobName,
      *          name of the <code>{@link org.quartz.JobDetail}</code>
      *          executed on firetime
-     * @param jobGroup
+     * @param jobGroup,
      *          group of the <code>{@link org.quartz.JobDetail}</code>
      *          executed on firetime
      * @param startTime
@@ -392,9 +392,9 @@ public class CronTrigger extends Trigger {
      * @param endTime
      *          A <code>Date</code> set to the time for the <code>Trigger</code>
      *          to quit repeat firing.
-     * @param cronExpression
+     * @param cronExpression,
      *          A cron expression dictating the firing sequence of the <code>Trigger</code>
-     * @param timeZone
+     * @param timeZone,
      *          Specifies for which time zone the <code>cronExpression</code>
      *          should be interprted, i.e. the expression 0 0 10 * * ?, is
      *          resolved to 10:00 am in this time zone.
@@ -530,7 +530,7 @@ public class CronTrigger extends Trigger {
 
     /**
      * <p>
-     * Set the previous time at which the <code>CronTrigger</code> fired.
+     * Set the previous time at which the <code>SimpleTrigger</code> fired.
      * </p>
      * 
      * <p>
@@ -629,7 +629,7 @@ public class CronTrigger extends Trigger {
     /**
      * <p>
      * Updates the <code>CronTrigger</code>'s state based on the
-     * MISFIRE_INSTRUCTION_XXX that was selected when the <code>CronTrigger</code>
+     * MISFIRE_INSTRUCTION_XXX that was selected when the <code>SimpleTrigger</code>
      * was created.
      * </p>
      * 
@@ -854,12 +854,12 @@ public class CronTrigger extends Trigger {
     ////////////////////////////////////////////////////////////////////////////
 
     protected Date getTimeAfter(Date afterTime) {
-    	return (cronEx == null) ? null : cronEx.getTimeAfter(afterTime);
+    	return cronEx.getTimeAfter(afterTime);
     }
 
     protected Date getTimeBefore(Date endTime) 
     {
-        return (cronEx == null) ? null : cronEx.getTimeBefore(endTime);
+        return null;
     }
 
     public static void main(String[] args) // TODO: remove method after good

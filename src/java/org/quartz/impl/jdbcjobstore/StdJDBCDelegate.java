@@ -34,14 +34,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+import java.util.Iterator;
+import java.util.HashMap;
 import java.util.Set;
+import java.util.Properties;
 import java.util.TimeZone;
 
 import org.apache.commons.logging.Log;
@@ -65,7 +65,6 @@ import org.quartz.utils.TriggerStatus;
  * 
  * @author <a href="mailto:jeff@binaryfeed.org">Jeffrey Wescott</a>
  * @author James House
- * @author Eric Mueller
  */
 public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
 
@@ -397,13 +396,11 @@ public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
                 String trigName = rs.getString(COL_TRIGGER_NAME);
                 String trigGroup = rs.getString(COL_TRIGGER_GROUP);
                 long firedTime = rs.getLong(COL_FIRED_TIME);
-                long priorityTime = rs.getLong(COL_PRIORITY_TIME);
                 SimpleTrigger rcvryTrig = new SimpleTrigger("recover_"
                         + instanceId + "_" + String.valueOf(dumId++),
                         Scheduler.DEFAULT_RECOVERY_GROUP, new Date(firedTime));
                 rcvryTrig.setJobName(jobName);
                 rcvryTrig.setJobGroup(jobGroup);
-                rcvryTrig.setPriorityTime(new Date(priorityTime));
                 rcvryTrig
                         .setMisfireInstruction(SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
 
@@ -1186,8 +1183,6 @@ public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
                 ps.setBytes(15, baos.toByteArray());
             else
                 ps.setBytes(15, null);
-            ps.setBigDecimal(16, new BigDecimal(String.valueOf(trigger
-                .getPriorityTime().getTime())));
             
             insertResult = ps.executeUpdate();
         } finally {
@@ -1385,20 +1380,15 @@ public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
             ps.setBigDecimal(10, new BigDecimal(String.valueOf(endTime)));
             ps.setString(11, trigger.getCalendarName());
             ps.setInt(12, trigger.getMisfireInstruction());
-            Date priorityTime = trigger.getPriorityTime();
-            if (priorityTime != null)
-              ps.setBigDecimal(13, new BigDecimal(String.valueOf(priorityTime.getTime())));
-            else
-              ps.setBigDecimal(13, new BigDecimal(-1));
             if(updateJobData) {
-                ps.setBytes(14, baos.toByteArray());
+                ps.setBytes(13, baos.toByteArray());
                 
-                ps.setString(15, trigger.getName());
-                ps.setString(16, trigger.getGroup());
-            }
-            else {
                 ps.setString(14, trigger.getName());
                 ps.setString(15, trigger.getGroup());
+            }
+            else {
+                ps.setString(13, trigger.getName());
+                ps.setString(14, trigger.getGroup());
             }
 
             insertResult = ps.executeUpdate();
@@ -1602,6 +1592,7 @@ public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
             ps.setString(1, state);
             ps.setString(2, triggerName);
             ps.setString(3, groupName);
+
             return ps.executeUpdate();
         } finally {
             if (null != ps) {
@@ -2386,7 +2377,6 @@ public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
                 long endTime = rs.getLong(COL_END_TIME);
                 String calendarName = rs.getString(COL_CALENDAR_NAME);
                 int misFireInstr = rs.getInt(COL_MISFIRE_INSTRUCTION);
-                long priorityTime = rs.getLong(COL_PRIORITY_TIME);
 
                 Map map = null;
                 if (canUseProperties()) map = getMapFromProperties(rs);
@@ -2396,10 +2386,6 @@ public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
                 Date nft = null;
                 if (nextFireTime > 0) {
                     nft = new Date(nextFireTime);
-                }
-                Date pt = null;
-                if (priorityTime > 0) {
-                    pt = new Date(priorityTime);
                 }
                 Date pft = null;
                 if (prevFireTime > 0) {
@@ -2435,7 +2421,6 @@ public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
                         st.setNextFireTime(nft);
                         st.setPreviousFireTime(pft);
                         st.setDescription(description);
-                        st.setPriorityTime(pt);
                         if (null != map) {
                             st.setJobDataMap(new JobDataMap(map));
                         }
@@ -2471,7 +2456,6 @@ public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
                             ct.setNextFireTime(nft);
                             ct.setPreviousFireTime(pft);
                             ct.setDescription(description);
-                            ct.setPriorityTime(pt);
                             if (null != map) {
                                 ct.setJobDataMap(new JobDataMap(map));
                             }
@@ -3337,59 +3321,6 @@ public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
 
     /**
      * <p>
-     * Select the triggers which are fire no later than the given time stamp,
-     * in ascending order of the priority time
-     * </p>
-     * 
-     * @param conn
-     *          the DB Connection
-     * @param count
-     *          maximal number of keys to retrieve
-     * @param noLaterThan
-     *          highest value of <code>getNextFireTime()</code> of the triggers
-     * @return An array of <code>{@link org.quartz.utils.Key}</code> of size <= n
-     *         representing the triggers that will be fired; if there are less triggers
-     *         than <code>count</code>, the entries with highest indices are <code>null</code>.
-     */
-    public int selectTriggersToAcquire(Connection conn, int count, long noLaterThan, List result)
-            throws SQLException
-    {
-      PreparedStatement ps = null;
-      ResultSet rs = null;
-      int remaining = count;
-      long nft;
-      try {
-          ps = conn.prepareStatement(rtp(SELECT_TRIGGERS_TO_ACQUIRE));
-          ps.setString(1, STATE_WAITING);
-          ps.setBigDecimal(2, new BigDecimal(String.valueOf(noLaterThan)));
-          rs = ps.executeQuery();
-          while (rs.next() && result.size() < count) {
-              nft = rs.getLong(COL_NEXT_FIRE_TIME);
-              if (nft < 0)
-                continue; // invalid fire time -> do not consider              
-              result.add(new Key(rs.getString(COL_TRIGGER_NAME), rs
-                  .getString(COL_TRIGGER_GROUP)));
-              remaining--;              
-          }
-          return remaining;
-      } finally {
-          if (null != rs) {
-              try {
-                  rs.close();
-              } catch (SQLException ignore) {
-              }
-          }
-          if (null != ps) {
-              try {
-                  ps.close();
-              } catch (SQLException ignore) {
-              }
-          }
-      }      
-    }
-
-    /**
-     * <p>
      * Insert a fired trigger.
      * </p>
      * 
@@ -3425,9 +3356,6 @@ public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
                 ps.setBoolean(10, false);
                 ps.setBoolean(11, false);
             }
-            ps.setBigDecimal(12, new BigDecimal(String.valueOf(trigger
-                .getPriorityTime().getTime())));
-            
 
             return ps.executeUpdate();
         } finally {
@@ -3471,7 +3399,6 @@ public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
                 rec.setFireInstanceId(rs.getString(COL_ENTRY_ID));
                 rec.setFireInstanceState(rs.getString(COL_ENTRY_STATE));
                 rec.setFireTimestamp(rs.getLong(COL_FIRED_TIME));
-                rec.setPriorityTimestamp(rs.getLong(COL_PRIORITY_TIME));
                 rec.setSchedulerInstanceId(rs.getString(COL_INSTANCE_NAME));
                 rec.setTriggerIsVolatile(rs.getBoolean(COL_IS_VOLATILE));
                 rec.setTriggerKey(new Key(rs.getString(COL_TRIGGER_NAME), rs
@@ -3535,7 +3462,6 @@ public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
                 rec.setFireInstanceId(rs.getString(COL_ENTRY_ID));
                 rec.setFireInstanceState(rs.getString(COL_ENTRY_STATE));
                 rec.setFireTimestamp(rs.getLong(COL_FIRED_TIME));
-                rec.setPriorityTimestamp(rs.getLong(COL_PRIORITY_TIME));
                 rec.setSchedulerInstanceId(rs.getString(COL_INSTANCE_NAME));
                 rec.setTriggerIsVolatile(rs.getBoolean(COL_IS_VOLATILE));
                 rec.setTriggerKey(new Key(rs.getString(COL_TRIGGER_NAME), rs
@@ -3596,7 +3522,6 @@ public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
                     rec.setJobKey(new Key(rs.getString(COL_JOB_NAME), rs
                             .getString(COL_JOB_GROUP)));
                 }
-                rec.setPriorityTimestamp(rs.getLong(COL_PRIORITY_TIME));
                 lst.add(rec);
             }
 
@@ -3617,50 +3542,6 @@ public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
         }
     }
 
-    /**
-     * <p>
-     * Select the distinct instance names of all fired-trigger records.
-     * </p>
-     * 
-     * <p>
-     * This is useful when trying to identify orphaned fired triggers (a 
-     * fired trigger without a scheduler state record.) 
-     * </p>
-     * 
-     * @return a Set of String objects.
-     */
-    public Set selectFiredTriggerInstanceNames(Connection conn) 
-            throws SQLException
-    {
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        try {
-            Set instanceNames = new HashSet();
-
-            ps = conn.prepareStatement(rtp(SELECT_FIRED_TRIGGER_INSTANCE_NAMES));
-            rs = ps.executeQuery();
-
-            while (rs.next()) {
-                instanceNames.add(rs.getString(COL_INSTANCE_NAME));
-            }
-
-            return instanceNames;
-        } finally {
-            if (null != rs) {
-                try {
-                    rs.close();
-                } catch (SQLException ignore) {
-                }
-            }
-            if (null != ps) {
-                try {
-                    ps.close();
-                } catch (SQLException ignore) {
-                }
-            }
-        }
-    }
-    
     /**
      * <p>
      * Delete a fired trigger.
@@ -3740,7 +3621,7 @@ public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
     }
 
     public int insertSchedulerState(Connection conn, String instanceId,
-            long checkInTime, long interval)
+            long checkInTime, long interval, String recoverer)
             throws SQLException {
         PreparedStatement ps = null;
         try {
@@ -3748,6 +3629,7 @@ public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
             ps.setString(1, instanceId);
             ps.setLong(2, checkInTime);
             ps.setLong(3, interval);
+            ps.setString(4, recoverer);
 
             return ps.executeUpdate();
         } finally {
@@ -3778,13 +3660,14 @@ public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
         }
     }
 
-    public int updateSchedulerState(Connection conn, String instanceId, long checkInTime)
+    public int updateSchedulerState(Connection conn, String instanceId, long checkInTime, String recoverer)
             throws SQLException {
         PreparedStatement ps = null;
         try {
             ps = conn.prepareStatement(rtp(UPDATE_SCHEDULER_STATE));
             ps.setLong(1, checkInTime);
-            ps.setString(2, instanceId);
+            ps.setString(2, recoverer);
+            ps.setString(3, instanceId);
         
             return ps.executeUpdate();
         } finally {
@@ -3818,6 +3701,7 @@ public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
                 rec.setSchedulerInstanceId(rs.getString(COL_INSTANCE_NAME));
                 rec.setCheckinTimestamp(rs.getLong(COL_LAST_CHECKIN_TIME));
                 rec.setCheckinInterval(rs.getLong(COL_CHECKIN_INTERVAL));
+                rec.setRecoverer(rs.getString(COL_RECOVERER));
 
                 lst.add(rec);
             }
@@ -3887,8 +3771,8 @@ public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
      * version of a <code>{@link org.quartz.JobDataMap}</code>.
      * </p>
      * 
-     * @param data
-     *          the JobDataMap to serialize
+     * @param obj
+     *          the object to serialize
      * @return the serialized ByteArrayOutputStream
      * @throws IOException
      *           if serialization causes an error

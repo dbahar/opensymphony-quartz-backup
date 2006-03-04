@@ -348,6 +348,7 @@ public class JobDetail implements Cloneable, java.io.Serializable {
      * </p>
      * 
      * @see JobExecutionContext#isRecovering()
+     * @see JobExecutionContext#isFailedOver()
      */
     public void setRequestsRecovery(boolean shouldRecover) {
         this.shouldRecover = shouldRecover;
@@ -412,6 +413,7 @@ public class JobDetail implements Cloneable, java.io.Serializable {
      * </p>
      * 
      * @see JobExecutionContext#isRecovering()
+     * @see JobExecutionContext#isFailedOver()
      */
     public boolean requestsRecovery() {
         return shouldRecover;

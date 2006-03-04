@@ -1278,7 +1278,7 @@ public class TriggerUtils {
 
         if (t.getNextFireTime() == null) {
             t.setStartTime(from);
-            t.setEndTime(to);        	
+            t.setEndTime(to);
             t.computeFirstFireTime(cal);
         }
 

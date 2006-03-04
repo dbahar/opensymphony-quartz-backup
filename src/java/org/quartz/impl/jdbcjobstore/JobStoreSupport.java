@@ -25,7 +25,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -550,48 +549,38 @@ public abstract class JobStoreSupport implements JobStore, Constants {
     
 
     protected Connection getConnection() throws JobPersistenceException {
-        Connection conn = null;
         try {
-            conn = DBConnectionManager.getInstance().getConnection(
+            Connection conn = DBConnectionManager.getInstance().getConnection(
                     getDataSource());
+
+            if (conn == null) { throw new SQLException(
+                    "Could not get connection from DataSource '"
+                    + getDataSource() + "'"); }
+
+            try {
+                if (!isDontSetAutoCommitFalse()) conn.setAutoCommit(false);
+
+                if(isTxIsolationLevelSerializable())
+                  conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+            } catch (SQLException ingore) {
+            } catch (Exception e) {
+            	if(conn != null)
+            		try { conn.close(); } catch(Throwable tt) {}
+            		throw new JobPersistenceException(
+            				"Failure setting up connection.", e);
+            }
+
+            return conn;
         } catch (SQLException sqle) {
             throw new JobPersistenceException(
                     "Failed to obtain DB connection from data source '"
                     + getDataSource() + "': " + sqle.toString(), sqle);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new JobPersistenceException(
                     "Failed to obtain DB connection from data source '"
                     + getDataSource() + "': " + e.toString(), e,
                     JobPersistenceException.ERR_PERSISTENCE_CRITICAL_FAILURE);
         }
-
-        if (conn == null) { 
-            throw new JobPersistenceException(
-                "Could not get connection from DataSource '"
-                + getDataSource() + "'"); 
-        }
-
-        // Wrap connection such that attributes that might be set will be
-        // restored before the connection is closed (and potentially restored 
-        // to a pool).
-        conn = new AttributeRestoringConnectionWrapper(conn);
-
-        // Set any connection connection attributes we are to override.
-        try {
-            if (!isDontSetAutoCommitFalse()) conn.setAutoCommit(false);
-
-            if(isTxIsolationLevelSerializable())
-              conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
-        } catch (SQLException sqle) {
-            getLog().warn("Failed to override connection auto commit/transaction isolation.", sqle);
-        } catch (Throwable e) {
-            try { conn.close(); } catch(Throwable tt) {}
-            
-            throw new JobPersistenceException(
-                "Failure setting up connection.", e);
-        }
-    
-        return conn;
     }
     
     protected void releaseLock(Connection conn, String lockName, boolean doIt) {
@@ -1741,80 +1730,7 @@ public abstract class JobStoreSupport implements JobStore, Constants {
 
     // TODO: this really ought to return something like a FiredTriggerBundle,
     // so that the fireInstanceId doesn't have to be on the trigger...
-    protected List acquireNextTriggers(Connection conn, SchedulingContext ctxt, long noLaterThan, int count)
-    throws JobPersistenceException {
-      List nextTriggers = new ArrayList(count);
-      List triggerKeys = new LinkedList();
-      Trigger nextTrigger = null;
-      boolean lastLoop = false; // no more triggerKeys to retrieve
-
-      do {
-          try {
-              getDelegate().updateTriggerStateFromOtherStatesBeforeTime(conn,
-                      STATE_MISFIRED, STATE_WAITING, STATE_WAITING,
-                      getMisfireTime()); // only waiting
-
-              // long nextFireTime = getDelegate().selectNextFireTime(conn);
-              
-
-              // if (nextFireTime == 0 || nextFireTime > noLaterThan) 
-              //    return null;
-              
-              if (getDelegate().selectTriggersToAcquire(conn, count-nextTriggers.size(), noLaterThan, triggerKeys)> 0)
-                lastLoop = true; 
-              Key triggerKey = null;
-              while (triggerKeys.size() > 0)
-              {
-                 triggerKey = (Key) triggerKeys.remove(0);                 
-                 int res = getDelegate()
-                              .updateTriggerStateFromOtherState(conn,
-                                      triggerKey.getName(),
-                                      triggerKey.getGroup(), STATE_ACQUIRED,
-                                      STATE_WAITING);
-
-                 if (res <= 0) continue;
-
-                 nextTrigger = retrieveTrigger(conn, ctxt, triggerKey
-                              .getName(), triggerKey.getGroup());
-
-                 if(nextTrigger == null) continue;
-                      
-                 nextTrigger.setFireInstanceId(getFiredTriggerRecordId());
-                 getDelegate().insertFiredTrigger(conn, nextTrigger,
-                          STATE_ACQUIRED, null);
-                 nextTriggers.add(nextTrigger);
-              }
-              if (lastLoop) { // it's useless to loop through the outer loop any more 
-                              // because there are not enough triggers available in total
-                if (nextTriggers.size() > 0)
-                  return nextTriggers;
-                else 
-                  return null;
-              }
-          } catch (Exception e) {
-              throw new JobPersistenceException(
-                      "Couldn't acquire next trigger: " + e.getMessage(), e);
-          }
-
-      } while (nextTriggers.size() < count);
-      if (nextTriggers.size() > 0)
-         return nextTriggers;
-      else 
-         return null;
-  }
-
-    public Trigger acquireNextTrigger(SchedulingContext ctxt, long noLaterThan)
-    throws JobPersistenceException {
-      List result = acquireNextTriggers(ctxt, noLaterThan, 1);
-      if (result == null)
-        return null;
-      else
-        return (Trigger) result.get(0);
-    }
-    
-    // TODO: this really ought to return something like a FiredTriggerBundle,
-    // so that the fireInstanceId doesn't have to be on the trigger...
-/*    protected Trigger acquireNextTrigger(Connection conn, SchedulingContext ctxt, long noLaterThan)
+    protected Trigger acquireNextTrigger(Connection conn, SchedulingContext ctxt, long noLaterThan)
             throws JobPersistenceException {
         Trigger nextTrigger = null;
 
@@ -1867,7 +1783,7 @@ public abstract class JobStoreSupport implements JobStore, Constants {
 
         return nextTrigger;
     }
-*/
+
     protected void releaseAcquiredTrigger(Connection conn,
             SchedulingContext ctxt, Trigger trigger)
             throws JobPersistenceException {
@@ -2112,101 +2028,87 @@ public abstract class JobStoreSupport implements JobStore, Constants {
 
     /**
      * Get a list of all scheduler instances in the cluster that may have failed.
-     * This includes this scheduler if it is checking in for the first time.
+     * This includes this scheduler if it has no recoverer and is checking for the
+     * first time.
      */
     protected List findFailedInstances(Connection conn)
             throws JobPersistenceException {
+    
+        List failedInstances = new LinkedList();
+        boolean selfFailed = false;
+        
+        long timeNow = System.currentTimeMillis();
+        
         try {
-            List failedInstances = new LinkedList();
-            boolean foundThisScheduler = false;
-            long timeNow = System.currentTimeMillis();
-            
             List states = getDelegate().selectSchedulerStateRecords(conn, null);
+            // build map of states by Id...
+            HashMap statesById = new HashMap();
+            Iterator itr = states.iterator();
+            while (itr.hasNext()) {
+                SchedulerStateRecord rec = (SchedulerStateRecord) itr.next();
+            	statesById.put(rec.getSchedulerInstanceId(), rec);
+            }        
 
-            for (Iterator itr = states.iterator(); itr.hasNext();) {
+            itr = states.iterator();
+            while (itr.hasNext()) {
                 SchedulerStateRecord rec = (SchedulerStateRecord) itr.next();
         
                 // find own record...
                 if (rec.getSchedulerInstanceId().equals(getInstanceId())) {
-                    foundThisScheduler = true;
                     if (firstCheckIn) {
-                        failedInstances.add(rec);
+                        if (rec.getRecoverer() == null) {
+                            failedInstances.add(rec);
+                        } else {
+                            // make sure the recoverer hasn't died itself!
+                            SchedulerStateRecord recOrec = (SchedulerStateRecord)statesById.get(rec.getRecoverer());
+                            
+                            long failedIfAfter = (recOrec == null) ? timeNow : calcFailedIfAfter(recOrec);
+
+                            // if it has failed, then let's become the recoverer
+                            if( failedIfAfter < timeNow || recOrec == null) {
+                                failedInstances.add(rec);
+                            }
+                        }
                     }
+                    // TODO: revisit when handle self-failed-out impled (see TODO in clusterCheckIn() below)
+                    // else if (rec.getRecoverer() != null) {
+                    //     selfFailed = true;
+                    // }
                 } else {
                     // find failed instances...
-                    if (calcFailedIfAfter(rec) < timeNow) {
-                        failedInstances.add(rec);
+                    long failedIfAfter = calcFailedIfAfter(rec);
+        
+                    if (rec.getRecoverer() == null) {
+                       if (failedIfAfter < timeNow) {
+                           failedInstances.add(rec);
+                       }
+                    } else {
+                        // make sure the recoverer hasn't died itself!
+                        SchedulerStateRecord recOrec = (SchedulerStateRecord)statesById.get(rec.getRecoverer());
+
+                        failedIfAfter = (recOrec == null) ? timeNow : calcFailedIfAfter(recOrec);
+
+                        // if it has failed, then let's become the recoverer
+                        if (failedIfAfter < timeNow || recOrec == null) {
+                            failedInstances.add(rec);
+                        }
                     }
                 }
             }
-            
-            // The first time through, also check for orphaned fired triggers.
-            if (firstCheckIn)
-            {
-                failedInstances.addAll(findOrphanedFailedInstances(conn, states));
-            }
-            
-            // If not the first time but we didn't find our own instance, then
-            // Someone must have done recovery for us.
-            if ((foundThisScheduler == false) && (firstCheckIn == false)) {
-                // TODO: revisit when handle self-failed-out implied (see TODO in clusterCheckIn() below)
-                getLog().warn(
-                    "This scheduler instance (" + getInstanceId() + ") is still " + 
-                    "active but was recovered by another instance in the cluster.  " +
-                    "This may cause inconsistent behavior.");
-            }
-            
-            return failedInstances;
         } catch (Exception e) {
             lastCheckin = System.currentTimeMillis();
             throw new JobPersistenceException("Failure identifying failed instances when checking-in: "
                     + e.getMessage(), e);
         }
-    }
     
-    /**
-     * Create dummy <code>SchedulerStateRecord</code> objects for fired triggers
-     * that have no scheduler state record.  Checkin timestamp and interval are
-     * left as zero on these dummy <code>SchedulerStateRecord</code> objects.
-     * 
-     * @param schedulerStateRecords List of all current <code>SchedulerStateRecords</code>
-     */
-    private List findOrphanedFailedInstances(
-            Connection conn, 
-            List schedulerStateRecords) 
-            throws SQLException, NoSuchDelegateException {
-        List orphanedInstances = new ArrayList();
-        
-        Set allFiredTriggerInstanceNames = getDelegate().selectFiredTriggerInstanceNames(conn);
-        if (allFiredTriggerInstanceNames.isEmpty() == false) {
-            for (Iterator schedulerStateIter = schedulerStateRecords.iterator(); 
-                 schedulerStateIter.hasNext();) {
-                SchedulerStateRecord rec = (SchedulerStateRecord)schedulerStateIter.next();
-                
-                allFiredTriggerInstanceNames.remove(rec.getSchedulerInstanceId());
-            }
-            
-            for (Iterator orphanIter = allFiredTriggerInstanceNames.iterator(); 
-                 orphanIter.hasNext();) {
-                
-                SchedulerStateRecord orphanedInstance = new SchedulerStateRecord();
-                orphanedInstance.setSchedulerInstanceId((String)orphanIter.next());
-                
-                orphanedInstances.add(orphanedInstance);
-                
-                getLog().warn(
-                    "Found orphaned fired triggers for instance: " + orphanedInstance.getSchedulerInstanceId());
-            }
-        }
-        
-        return orphanedInstances;
+        return failedInstances;
     }
     
     protected long calcFailedIfAfter(SchedulerStateRecord rec) {
-        return rec.getCheckinTimestamp() +
-            Math.max(rec.getCheckinInterval(), 
-                    (System.currentTimeMillis() - lastCheckin)) +
-            7500L;
+    	return rec.getCheckinTimestamp() +
+	        Math.max(rec.getCheckinInterval(), 
+	        		(System.currentTimeMillis() - lastCheckin)) +
+	        7500L;
     }
     
     protected List clusterCheckIn(Connection conn)
@@ -2219,9 +2121,9 @@ public abstract class JobStoreSupport implements JobStore, Constants {
 
             // check in...
             lastCheckin = System.currentTimeMillis();
-            if(getDelegate().updateSchedulerState(conn, getInstanceId(), lastCheckin) == 0) {
+            if(getDelegate().updateSchedulerState(conn, getInstanceId(), lastCheckin, null) == 0) {
                 getDelegate().insertSchedulerState(conn, getInstanceId(),
-                        lastCheckin, getClusterCheckinInterval());
+                        lastCheckin, getClusterCheckinInterval(), null);
             }
             
         } catch (Exception e) {
@@ -2363,7 +2265,7 @@ public abstract class JobStoreSupport implements JobStore, Constants {
                     if (rec.getSchedulerInstanceId().equals(getInstanceId())) {
                         getDelegate().insertSchedulerState(conn,
                                 rec.getSchedulerInstanceId(), System.currentTimeMillis(),
-                                rec.getCheckinInterval());
+                                rec.getCheckinInterval(), null);
                     }
 
                 }
@@ -2438,7 +2340,7 @@ public abstract class JobStoreSupport implements JobStore, Constants {
             }
         }
     }
-    
+
     /////////////////////////////////////////////////////////////////////////////
     //
     // ClusterManager Thread

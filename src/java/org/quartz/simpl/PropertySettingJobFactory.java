@@ -40,7 +40,7 @@ import org.quartz.spi.TriggerFiredBundle;
  * 
  * @see org.quartz.spi.JobFactory
  * @see SimpleJobFactory
- * @see org.quartz.JobExecutionContext#getMergedJobDataMap()
+ * @see JobExecutionContext#getMergedJobDataMap()
  * @see #setWarnIfPropertyNotFound(boolean)
  * @see #setThrowIfPropertyNotFound(boolean)
  * 

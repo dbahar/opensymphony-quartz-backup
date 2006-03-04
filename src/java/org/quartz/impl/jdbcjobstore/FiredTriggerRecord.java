@@ -57,8 +57,6 @@ public class FiredTriggerRecord implements java.io.Serializable {
 
     private boolean jobRequestsRecovery;
 
-    private long priorityTimestamp;
-
     /*
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      * 
@@ -138,16 +136,6 @@ public class FiredTriggerRecord implements java.io.Serializable {
     public void setTriggerIsVolatile(boolean b) {
         triggerIsVolatile = b;
     }
-
-    public long getPriorityTimestamp() {
-        return priorityTimestamp;
-    }
-    
-
-    public void setPriorityTimestamp(long priorityTimestamp) {
-        this.priorityTimestamp = priorityTimestamp;
-    }
-    
 
 }
 

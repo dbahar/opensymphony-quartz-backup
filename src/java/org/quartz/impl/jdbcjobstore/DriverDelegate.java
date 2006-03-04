@@ -938,10 +938,12 @@ public interface DriverDelegate {
      * 
      * @param conn
      *          the DB Connection
-     * @param calName
-     *          the name of the calendar
+     * @param jobName
+     *          the name of the trigger
+     * @param groupName
+     *          the group containing the trigger
      * @return an array of <code>(@link org.quartz.Trigger)</code> objects
-     *         associated with the given calendar.
+     *         associated with a given job.
      * @throws SQLException
      */
     public Trigger[] selectTriggersForCalendar(Connection conn, String calName)
@@ -1237,27 +1239,6 @@ public interface DriverDelegate {
 
     /**
      * <p>
-     * Select the triggers which are fire no later than the given time stamp,
-     * in ascending order of the priority time
-     * </p>
-     * 
-     * @param conn
-     *          the DB Connection
-     * @param count
-     *          maximal number of keys to retrieve
-     * @param noLaterThan
-     *          highest value of <code>getNextFireTime()</code> of the triggers
-     * @param result a list of <code>{@link org.quartz.utils.Key}</code>
-     *         representing the triggers to be fired. The found triggers will be
-     *         added to the list. The parameter must not be <code>null</code>
-     * @return the difference of <code>count</code> and the number of keys retrieved
-     *         (non-negative) 
-     */
-    public int selectTriggersToAcquire(Connection conn, int count, long noLaterThan, List result)
-            throws SQLException;
-
-    /**
-     * <p>
      * Insert a fired trigger.
      * </p>
      * 
@@ -1305,22 +1286,6 @@ public interface DriverDelegate {
     public List selectInstancesFiredTriggerRecords(Connection conn,
             String instanceName) throws SQLException;
 
-    
-    /**
-     * <p>
-     * Select the distinct instance names of all fired-trigger records.
-     * </p>
-     * 
-     * <p>
-     * This is useful when trying to identify orphaned fired triggers (a 
-     * fired trigger without a scheduler state record.) 
-     * </p>
-     * 
-     * @return a Set of String objects.
-     */
-    public Set selectFiredTriggerInstanceNames(Connection conn) 
-            throws SQLException;
-    
     /**
      * <p>
      * Delete a fired trigger.
@@ -1357,7 +1322,7 @@ public interface DriverDelegate {
      * @return the number of inserted rows.
      */
     public int insertSchedulerState(Connection conn, String instanceId,
-            long checkInTime, long interval)
+            long checkInTime, long interval, String recoverer)
             throws SQLException;
 
     /**
@@ -1382,7 +1347,7 @@ public interface DriverDelegate {
      *          the DB Connection
      * @return the number of updated rows.
      */
-    public int updateSchedulerState(Connection conn, String instanceId, long checkInTime)
+    public int updateSchedulerState(Connection conn, String instanceId, long checkInTime, String recoverer)
             throws SQLException;
     
     /**
@@ -1398,7 +1363,7 @@ public interface DriverDelegate {
      * @param conn
      *          the DB Connection
      */
-    public List selectSchedulerStateRecords(Connection conn, String instanceId)
+    public List selectSchedulerStateRecords(Connection conn, String instanceId) // TODO: this method would be more handy if it returned a map.
             throws SQLException;
 
 }

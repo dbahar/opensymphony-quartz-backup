@@ -184,7 +184,7 @@ public interface Scheduler {
     /// Schedululer State Management Methods
     ///
     ///////////////////////////////////////////////////////////////////////////
-    
+
     /**
      * <p>
      * Starts the <code>Scheduler</code>'s threads that fire <code>{@link Trigger}s</code>.
@@ -334,7 +334,8 @@ public interface Scheduler {
      * give the opertunity for dependency injection.
      * </p>
      * 
-     * @see org.quartz.spi.JobFactory
+     * @see org.quart.spi.JobFactory
+     * @throws SchedulerException
      */
     public void setJobFactory(JobFactory factory) throws SchedulerException;
     
@@ -680,6 +681,9 @@ public interface Scheduler {
      * <p>
      * Get the names of all <code>{@link Trigger}</code> groups that are paused.
      * </p>
+     * 
+     * @return
+     * @throws SchedulerException
      */
     public Set getPausedTriggerGroups() throws SchedulerException;
     

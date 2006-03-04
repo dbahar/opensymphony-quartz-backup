@@ -20,7 +20,6 @@
  */
 package org.quartz.spi;
 
-import java.util.List;
 import java.util.Set;
 
 import org.quartz.Calendar;
@@ -52,7 +51,6 @@ import org.quartz.core.SchedulingContext;
  * @see org.quartz.Calendar
  * 
  * @author James House
- * @author Eric Mueller
  */
 public interface JobStore {
 
@@ -622,21 +620,6 @@ public interface JobStore {
      * @see #releaseAcquiredTrigger(SchedulingContext, Trigger)
      */
     public Trigger acquireNextTrigger(SchedulingContext ctxt, long noLaterThan)
-            throws JobPersistenceException;
-
-    /**
-     * <p>
-     * Get handles to the next triggers to be fired, and mark them as 'reserved'
-     * by the calling scheduler.
-     * </p>
-     *
-     * @param noLaterThan If > 0, the JobStore should only return a Trigger 
-     * that will fire no later than the time represented in this value as 
-     * milliseconds.
-     * @param count maximal number of triggers to be obtained
-     * @see #releaseAcquiredTrigger(SchedulingContext, Trigger)
-     */
-    public List acquireNextTriggers(SchedulingContext ctxt, long noLaterThan, int count)
             throws JobPersistenceException;
 
     /**
