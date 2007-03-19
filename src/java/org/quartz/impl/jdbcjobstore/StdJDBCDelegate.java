@@ -3466,7 +3466,8 @@ public class StdJDBCDelegate implements DriverDelegate, StdJDBCConstants {
                 if (binaryInput instanceof ByteArrayInputStream
                     && ((ByteArrayInputStream) binaryInput).available() == 0 ) {
                     //do nothing
-                } else {
+                }
+                else {
                     ObjectInputStream in = new ObjectInputStream(binaryInput);
                     try {
                         obj = in.readObject();

@@ -495,8 +495,7 @@ public class JobDetail implements Cloneable, java.io.Serializable {
         JobDetail copy;
         try {
             copy = (JobDetail) super.clone();
-            copy.jobListeners = SetUtils.orderedSet(new HashSet());
-            copy.jobListeners.addAll(jobListeners);
+            copy.jobListeners = SetUtils.orderedSet(new HashSet(jobListeners));
             if (jobDataMap != null) {
                 copy.jobDataMap = (JobDataMap) jobDataMap.clone();
             }

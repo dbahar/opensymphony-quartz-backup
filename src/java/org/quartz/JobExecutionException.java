@@ -155,10 +155,6 @@ public class JobExecutionException extends SchedulerException {
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      */
 
-    public void setRefireImmediately(boolean refire) {
-        this.refire = refire;
-    }
-
     public boolean refireImmediately() {
         return refire;
     }

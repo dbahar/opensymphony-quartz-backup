@@ -180,7 +180,8 @@ public class JobRunShell implements Runnable {
                     int instCode = trigger.executionComplete(jec, null);
                     try {
                         qs.notifyJobStoreJobVetoed(schdCtxt, trigger, jobDetail, instCode);
-                    } catch(JobPersistenceException jpe) {
+                    }
+                    catch(JobPersistenceException jpe) {
                         vetoedJobRetryLoop(trigger, jobDetail, instCode);
                     }
                     complete(true);

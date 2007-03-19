@@ -334,8 +334,6 @@ public class StdSchedulerFactory implements SchedulerFactory {
 
         Properties props = new Properties();
 
-        InputStream in = null;
-
         if (propFile.exists()) {
             try {
                 if (requestedFile != null) {
@@ -353,7 +351,7 @@ public class StdSchedulerFactory implements SchedulerFactory {
                 throw initException;
             }
         } else if (requestedFile != null) {
-            in =
+            InputStream in = 
                 Thread.currentThread().getContextClassLoader().getResourceAsStream(requestedFile);
 
             if(in == null) {
@@ -375,7 +373,7 @@ public class StdSchedulerFactory implements SchedulerFactory {
         } else {
             propSrc = "default resource file in Quartz package: 'quartz.properties'";
 
-            in = getClass().getClassLoader().getResourceAsStream(
+            InputStream in = getClass().getClassLoader().getResourceAsStream(
                     "quartz.properties");
 
             if (in == null) {
@@ -400,11 +398,7 @@ public class StdSchedulerFactory implements SchedulerFactory {
                 throw initException;
             }
         }
-
-        if(in != null) {
-            try { in.close(); } catch(Exception ignore) {}
-        }
-
+        
         initialize(overrideWithSysProps(props));
     }
 
@@ -1107,9 +1101,7 @@ public class StdSchedulerFactory implements SchedulerFactory {
 
         JobRunShellFactory jrsf = null; // Create correct run-shell factory...
 
-        if (userTXLocation != null) {
-            UserTransactionHelper.setUserTxLocation(userTXLocation);
-        }
+        UserTransactionHelper.setUserTxLocation(userTXLocation);
 
         if (wrapJobInTx) {
             jrsf = new JTAJobRunShellFactory();
