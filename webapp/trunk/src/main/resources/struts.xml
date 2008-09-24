@@ -94,14 +94,14 @@
 			<result name="success" type="freemarker">/schedule/down.ftl</result>
 		</action>
 
-		<action name="logon" class="logonAction">
+		<action name="logon" class="org.quartz.ui.web.action.LogonAction">
 		<interceptor-ref name="defaultStack" />
 			<result name="success" type="freemarker">/logon.ftl</result>
 			<result name="input" type="freemarker">/logon.ftl</result>
 		</action>
 		
 		<action name="index">
-			<result name="success" type="freemarker">index.ftl</result>
+			<result name="success" type="freemarker">/index.ftl</result>
 		</action>
 
 	</package>
@@ -109,23 +109,23 @@
 
 	<package name="logon" extends="quartzDefault">
 
-		<action name="logon" class="logonAction">
-		<interceptor-ref name="defaultStack" />
+		<action name="logon" class="org.quartz.ui.web.action.LogonAction">
+			<interceptor-ref name="defaultStack" />
 			<result name="success" type="freemarker">/logon.ftl</result>
 			<result name="input" type="freemarker">/logon.ftl</result>
 		</action>
 
 		<action name="authenticate"
-			class="logonAction" method="logon">
+			class="org.quartz.ui.web.action.LogonAction" method="logon">
 			<interceptor-ref name="defaultStack" />
-			<result name="success" type="redirect-action">
+			<result name="success" type="redirectAction">
 				<param name="actionName">index</param>
 				<param name="namespace">/</param>
 			</result>
 			<result name="input" type="chain">logon</result>
 		</action>
 
-		<action name="logout" class="logonAction" method="logout">
+		<action name="logout" class="org.quartz.ui.web.action.LogonAction" method="logout">
 			<interceptor-ref name="defaultStack" />
 			<result name="success" type="freemarker">/logon.ftl</result>
 		</action>
@@ -354,18 +354,15 @@
 
 	</package>
 
-
 	<package name="definition" extends="quartzDefault" namespace="/jobs/definition">
-
-	  <!-- 
+	   
 		<action name="*" class="org.quartz.ui.web.action.definitions.DefinitionCrud">
 			<result name="input" type="freemarker">edit.ftl</result>
 			<result name="success" type="chain">list</result>
-			<result name="error" type="freemarker">edit.ftl
-			</result>
+			<result name="error" type="freemarker">edit.ftl</result>
 			<result name="cancel" type="redirect">list.action</result>
 		</action>
- -->
+ 
 		<action name="edit" class="org.quartz.ui.web.action.definitions.DefinitionCrud">
 			<result name="input" type="freemarker">edit.ftl</result>
 			<result name="success" type="freemarker">edit.ftl</result>
