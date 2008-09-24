@@ -1,0 +1,10 @@
+Before being able to use --
+
+	-convert List jobs and List all Triggers to freemarker sortable interface
+	-chooseSchedule -- make current button have feedback, all with text feedback
+		--options
+			-- bubble poof
+	-Use jquery on scheduling interface
+	-consoladate scheduling to single interface (no more simple, cron, ui)
+	-convert many of the forms not to be layed out with tables
+	

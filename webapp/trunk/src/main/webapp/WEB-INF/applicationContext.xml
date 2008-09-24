@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.0.xsd">
+
+
+	<bean id="authenticator"
+		class="org.quartz.ui.web.security.SimpleAuthenticator">
+		<property name="username">
+			<value>quartz</value>
+		</property>
+		<property name="password">
+			<value>quartz</value>
+		</property>
+	</bean>
+
+
+	<bean id="logonAction"
+		class="org.quartz.ui.web.action.LogonAction" scope="prototype">
+		<property name="authenticator" ref="authenticator" />
+	</bean>
+
+
+	<!-- 
+		<bean id="quartzUser" class="org.quartz.ui.web.security.User">
+		<property name="userName"><value>quartz</value></property>
+		<property name="password"><value>quartz</value></property>
+		<property name="roles">
+		<map>
+		<entry key="manager">
+		<value>manager</value>
+		</entry>
+		</map>
+		</property>
+		</bean>
+	-->
+
+	<bean id="users" class="org.quartz.ui.web.security.Users">
+		<property name="userMap">
+			<map>
+				<entry key="quartz">
+					<ref bean="quartzUser" />
+				</entry>
+			</map>
+		</property>
+	</bean>
+
+	<!-- Quartz Scheduler, with pre-registered triggers -->
+	<!-- Will automatically start scheduling on context startup -->
+	<!--
+		<bean id="scheduler" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+		<list>
+		<ref local="listImagesTrigger"/>
+		<ref local="checkImagesTrigger"/>
+		</list>
+		</property> 
+		</bean>
+	-->
+	<!--
+		<bean id="dirPlugin" class="org.quartz.ui.web.action.DirMonitorCreate" />
+	-->
+
+
+</beans>
