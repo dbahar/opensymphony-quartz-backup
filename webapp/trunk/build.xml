@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<project name="Quartz Webapp" default="war" basedir=".">
+	<property file="build.properties" />
+	
+	<property name="webcontext" value="quartz" />
+	<property name="warfile" value="${webcontext}.war" />
+
+	<path id="project-cp">
+		<fileset dir="lib" includes="**" />
+	</path>
+	
+	<target name="clean" description="Remove all build artifacts">
+		<delete dir="classes" />
+		<delete file="target/quartz.war" />
+	</target>
+	
+	<target name="compile" description="Compile java source">
+		<mkdir dir="classes" />
+		<javac srcdir="src/main/java" destdir="classes">
+			<classpath refid="project-cp" />
+		</javac>
+	</target>
+	
+	<target name="war" depends="compile" description="Build and package quartz.war">
+		<mkdir dir="target" />
+		<war destfile="target/${warfile}">
+			<fileset dir="src/main/webapp" excludes="META-INF" />
+			<lib dir="lib">
+				<exclude name="junit*.jar" />
+				<exclude name="servlet-api.jar" />
+			</lib>
+			<classes dir="classes" />
+			<classes dir="src/main/resources" />
+		</war>
+	</target>
+	
+	<target name="_tomcat_init">
+		<fail message="Missing property: 'tomcat.home'.  You probably haven't set it in your build.properties file." unless="tomcat.home" />
+	</target>
+	
+	<target name="deploy" depends="_tomcat_init, war" description="Copy the war file to Tomcat's webapps directory.  Requires tomcat.home be set in bulid.properties.">
+		<copy file="target/${warfile}" todir="${tomcat.home}/webapps" />
+	</target>
+	
+	<target name="undeploy" depends="_tomcat_init" description="Deletes the war file and webapp folder in Tomcat's webapps directory.  Requires tomcat.home be set in bulid.properties.">
+		<delete dir="${tomcat.home}/webapps/${webcontext}" />
+		<delete file="${tomcat.home}/webapps/${warfile}" />
+	</target>
+
+</project>
