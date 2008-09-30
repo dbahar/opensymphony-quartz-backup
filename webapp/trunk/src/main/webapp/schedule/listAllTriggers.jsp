@@ -10,7 +10,7 @@
 <display:table name="triggers" class="simple" id="row" requestURI="listTriggers.action">
   <display:column  titleKey="label.global.actions" > 
 	<s:url  id="joburl" value='/jobs/viewJob.action'>
-   		   <s:param name="jobName">${row.name}</s:param>
+   		   <s:param name="jobName">${row.jobName}</s:param>
    		   <s:param name="jobGroup">${row.group}</s:param>
    	</s:url>
 	<a href='${joburl}'><s:text name="label.global.view"/></a>
