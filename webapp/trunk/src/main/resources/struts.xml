@@ -355,13 +355,6 @@
 	</package>
 
 	<package name="definition" extends="quartzDefault" namespace="/jobs/definition">
-	   
-		<action name="*" class="org.quartz.ui.web.action.definitions.DefinitionCrud">
-			<result name="input" type="freemarker">edit.ftl</result>
-			<result name="success" type="chain">list</result>
-			<result name="error" type="freemarker">edit.ftl</result>
-			<result name="cancel" type="redirect">list.action</result>
-		</action>
  
 		<action name="edit" class="org.quartz.ui.web.action.definitions.DefinitionCrud">
 			<result name="input" type="freemarker">edit.ftl</result>
@@ -382,6 +375,13 @@
 
 		<action name="delete" class="org.quartz.ui.web.action.definitions.DefinitionCrud">
 			<result name="success" type="redirect">list.action</result>
+		</action>
+	   
+		<action name="*" class="org.quartz.ui.web.action.definitions.DefinitionCrud">
+			<result name="input" type="freemarker">edit.ftl</result>
+			<result name="success" type="chain">list</result>
+			<result name="error" type="freemarker">edit.ftl</result>
+			<result name="cancel" type="redirect">list.action</result>
 		</action>
 
 		<action name="raw" class="org.quartz.ui.web.action.definitions.Raw">

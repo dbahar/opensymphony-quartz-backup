@@ -76,7 +76,7 @@ function deleteByParent(obj, levels) {
 <#else>
 <h1><@s.text name="title.createDefinition"/></h1>
 </#if>
-<form name="definitionForm" method="post" action="add.action">
+<form name="definitionForm" method="post" action="save.action">
 <table>
 	<tr>
 		<td><@s.text name="label.job.name"/></td>
