@@ -18,7 +18,7 @@
     <#if def_index % 2 == 0><tr class="odd"><#else><tr class="even"></#if>
         <td  nowrap="true"><a href="${base}/jobs/createDefinedJob.action?method=start&definitionName=${def.name!}"><@s.text name="label.global.createJob"/></a>
         <a href="edit.action?definitionName=${def.name!}"><@s.text name="label.global.edit"/></a>
-        <a onclick="javascript:return confirm('<@s.text name="label.confirm.deleteDefinition"/>');" href="/delete.action?definitionName=${def.name!}"><@s.text name="label.global.delete"/></a>
+        <a onclick="javascript:return confirm('<@s.text name="label.confirm.deleteDefinition"/>');" href="delete.action?definitionName=${def.name!}"><@s.text name="label.global.delete"/></a>
         </td>
         <td> ${def.class} ${def.name!}</td>
         <td >${def.description!}</td>

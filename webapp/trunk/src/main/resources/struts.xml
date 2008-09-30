@@ -373,7 +373,7 @@
 			<result name="success" type="freemarker">list.ftl</result>
 		</action>
 
-		<action name="delete" class="org.quartz.ui.web.action.definitions.DefinitionCrud">
+		<action name="delete" class="org.quartz.ui.web.action.definitions.DefinitionCrud" method="delete">
 			<result name="success" type="redirect">list.action</result>
 		</action>
 	   
