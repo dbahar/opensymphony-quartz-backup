@@ -16,7 +16,7 @@
 	
 	<target name="compile" description="Compile java source">
 		<mkdir dir="classes" />
-		<javac srcdir="src/main/java" destdir="classes">
+		<javac srcdir="src/main/java" destdir="classes" debug="on">
 			<classpath refid="project-cp" />
 		</javac>
 	</target>
@@ -35,7 +35,9 @@
 	</target>
 	
 	<target name="_tomcat_init">
-		<fail message="Missing property: 'tomcat.home'.  You probably haven't set it in your build.properties file." unless="tomcat.home" />
+		<fail unless="tomcat.home" message="Missing property: 'tomcat.home'.  You probably haven't set it in your build.properties file." />
+		
+		<property name="contextdir" value="${tomcat.home}/webapps/${webcontext}" />
 	</target>
 	
 	<target name="deploy" depends="_tomcat_init, war" description="Copy the war file to Tomcat's webapps directory.  Requires tomcat.home be set in bulid.properties.">
@@ -43,8 +45,17 @@
 	</target>
 	
 	<target name="undeploy" depends="_tomcat_init" description="Deletes the war file and webapp folder in Tomcat's webapps directory.  Requires tomcat.home be set in bulid.properties.">
-		<delete dir="${tomcat.home}/webapps/${webcontext}" />
-		<delete file="${tomcat.home}/webapps/${warfile}" />
+		<delete dir="${contextdir}" />
+		<delete file="${contextdir}/${warfile}" />
+	</target>
+	
+	<target name="copyweb" depends="_tomcat_init" description="Copies web artifacts (jsp's, ftl's, etc.) to the deployed web context.">
+		<copy todir="${contextdir}">
+			<fileset dir="src/main/webapp">
+				<exclude name="META-INF/**" />
+				<exclude name="WEB-INF/**" />
+			</fileset>
+		</copy>
 	</target>
 
 </project>
