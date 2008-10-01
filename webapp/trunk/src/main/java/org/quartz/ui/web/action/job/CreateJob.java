@@ -39,11 +39,9 @@ public class CreateJob extends BaseAction  {
 	@Override
 	public void validate() {
 
-		Class jobClass = null;
-
 		if ((className != null) && (className.length() > 0)) {
 			try {
-				jobClass = Class.forName(className);
+				Class.forName(className);
 			} catch (ClassNotFoundException e) {
 				this.addFieldError("className", "error " + className
 						+ " class is not found");
@@ -79,10 +77,8 @@ public class CreateJob extends BaseAction  {
 	@Override
 	public String execute() {
 
-			Class jobClass = null;
 			try {
-				jobClass = Class.forName(className);
-				jobDetail.setJobClass(jobClass);
+				jobDetail.setJobClass(Class.forName(className));
 
 				for (int i = 0; i < parameterNames.length; i++) {
 					if (parameterNames[i].trim().length() > 0
