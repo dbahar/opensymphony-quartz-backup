@@ -243,8 +243,8 @@
 
 		<action name="listJobs"
 			class="org.quartz.ui.web.action.schedule.ListJobs">
-			<result name="success" type="dispatcher">
-				/jobs/listAllJobs.jsp
+			<result name="success" type="freemarker">
+				/jobs/list.ftl
 			</result>
 		</action>
 
