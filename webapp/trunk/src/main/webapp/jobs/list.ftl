@@ -6,8 +6,15 @@
 <script type="text/javascript">
 $(document).ready( function() {
 	 $("#jobTable").tablesorter({
-	 		 widgets: ['zebra']
-		});
+	 		 widgets: ['zebra'],
+	 		 headers: { 
+            	// assign the secound column (we start counting zero) 
+            	0: { 
+                	// disable it by setting the property sorter to false 
+                	sorter: false 
+            	} 
+            }
+   	});
 	 $("#searchName").focus(); 	
 	 //$("#summaryTable").tableHover(); 
 });
@@ -27,7 +34,7 @@ Find job(s) by name:
 <table id="jobTable" cellspacing="0" cellpadding="3" class="tablesorter">
     <thead>
     <tr>
-	<th><em><@s.text name="label.global.actions"/></em></th>
+	<th class="{sorter: false}"><em><@s.text name="label.global.actions"/></em></th>
         <th><@s.text name="label.job.group"/></th>
         <th><@s.text name="label.job.name"/></th>
         <th><@s.text name="label.job.description"/></th>
@@ -36,7 +43,7 @@ Find job(s) by name:
    </thead><tbody>
     <#list jobs as job>
     <#if job_index % 2 == 0><tr ><#else><tr></#if>
-        <td  nowrap="true">
+        <td nowrap="true">
         <a href='${base}/jobs/viewJob.action?jobName=${job.name!}&jobGroup=${job.group!}}'><@s.text name="label.global.view" /></a> |
 		<a href='${base}/jobs/editJob.action?jobName=${job.name!}&jobGroup=${job.group!}'><@s.text name="label.global.edit" /></a> |
 		<a href='${base}/jobs/executeJob.action?jobName=${job.name!}&jobGroup=${job.group!}'><@s.text name="label.global.execute" /></a>

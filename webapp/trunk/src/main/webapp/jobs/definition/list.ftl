@@ -6,7 +6,14 @@
 <script type="text/javascript">
 $(document).ready( function() {
 	 $("#definitionTable").tablesorter({
-	 		 widgets: ['zebra']
+	 		 widgets: ['zebra'],
+	 		  headers: { 
+            	// assign the secound column (we start counting zero) 
+            	0: { 
+                	// disable it by setting the property sorter to false 
+                	sorter: false 
+            	} 
+            }
 		});
 	 //$("#summaryTable").tableHover(); 
 });
@@ -20,7 +27,7 @@ $(document).ready( function() {
 <table id="definitionTable" cellspacing="0" cellpadding="3" width="100%"  class="tablesorter">
     <thead>
     <tr>
-	<th><em><@s.text name="label.definitions.actions"/></em></th>
+	<th class="{sorter: false}"><em><@s.text name="label.definitions.actions"/></em></th>
         <th><@s.text name="label.definitions.name"/></th>
         <th><@s.text name="label.definitions.description"/></th>
         <th><@s.text name="label.definitions.class"/></th>
