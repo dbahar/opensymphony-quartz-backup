@@ -4,7 +4,6 @@
 <head> 
    <title>${title}</title>
     <link rel=stylesheet type=text/css href='${base}/include/style/default.css'/>
-    
     <link rel=stylesheet type=text/css href='${base}/include/style/layout.css'/>
     <link rel=stylesheet type=text/css href='${base}/include/style/form.css'/>
     <script type="text/javascript" src="${base}/include/js/jquery/jquery-1.2.3.pack.js"></script>
