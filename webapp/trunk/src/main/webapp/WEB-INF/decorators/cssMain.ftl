@@ -28,6 +28,12 @@
 </#if>
 
 <div id="middlebox">
+<#if (actionMessages?? && actionMessages.size() > 0)><#include "/WEB-INF/decorators/msg.ftl"/></#if>
+<#if !(page.getProperty('meta.noerrors')?exists)>
+		<#if (fieldErrors?? && actionErrors??) && (fieldErrors.size() > 0 || actionErrors.size() > 0)>
+			<#include "/WEB-INF/decorators/error_msg.ftl"/>
+		</#if>
+</#if>
 ${body}
 </div>
 

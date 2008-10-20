@@ -40,7 +40,13 @@ div.error{
 		<div class="warningMacro">Field Errors
 		<ul>
 			<#list fieldErrors.keySet() as errorKey>
-			<li>${errorKey} - ${fieldErrors.get(errorKey)}</li>
+			<li>Field: ${errorKey} 
+				<ul>
+					<#list fieldErrors.get(errorKey) as errorMsg>
+						<li>${errorMsg}</li>
+					</#list>					
+				</ul>
+			</li>
 			</#list>
 		</ul>
 		</div>
