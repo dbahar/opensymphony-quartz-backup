@@ -1,5 +1,25 @@
 <html>
 <head>
+<style type="text/css">
+
+fieldset input {
+	width: 200px;
+}
+
+form label 	{
+		padding:0px 10px;
+		width: 200px;
+		float: left;
+}
+
+fieldset {
+	width: 695px;
+}
+.buttonFwd {
+	width: 90px;
+}
+</style>
+
 <script language="JavaScript">
 function doAddParameter() {
 	var name = document.getElementById("parameter.name");
@@ -66,32 +86,31 @@ function deleteByParent(obj, levels) {
 	}
 		
 }
-
 </script>
 </head>
 <body>
-<#if (definition?exists && definition.name.length() > 0)>
-<h1><@s.text name="title.createDefinition"/></h1>
-	<#assign edit="true"/>
-<#else>
-<h1><@s.text name="title.createDefinition"/></h1>
-</#if>
 <form name="definitionForm" method="post" action="save.action">
-<table>
-	<tr>
-		<td><@s.text name="label.job.name"/></td>
-		<td><input type="text" name="definition.name" value="${(definition.name)!}"/> </td>
-	</tr>
-	<tr>
-		<td><@s.text name="label.job.jobClass"/></td>
-		<td><input type="text"  name="definition.className" value="${(definition.className)!}" /></td>
-	</tr>
-	<tr>
-		<td><@s.text name="label.job.description"/></td>
-		<td><textarea name="definition.description">${(definition.description)!}</textarea></td>
-	</tr>
-</table>
-<input type="hidden" name="definitionName" value="${(definition.name)!}" />
+ <input type="hidden" name="definitionName" value="${(definition.name)!}" />
+ 
+    <fieldset>
+      <legend>
+      <#if (definition?? && definition.name.length() > 0)>
+      	<#assign edit="true"/>
+      	<@s.text name="title.editDefinition"/>
+      <#else>
+      	<@s.text name="title.createDefinition"/>
+      </#if>
+      </legend>
+      
+      
+		<label for="definitionName"><@s.text name="label.job.name"/></label>
+		<input type="text" id="definitionName" name="definition.name" value="${(definition.name)!}"/> <br/>
+	
+		<label for="definitionClass"><@s.text name="label.job.jobClass"/></label>
+		<input type="text" id="definitionClass"  name="definition.className" value="${(definition.className)!}" /><br/>
+		<label for="defDescription"><@s.text name="label.job.description"/></label>
+		<textarea id="defDescription" name="definition.description">${(definition.description)!}</textarea><br/>
+		
 <h3><@s.text name="label.definitions.params"/></h3>
 <h3><@s.text name="title.createDefinitionJob.params"/></h3>
 <table>
@@ -112,9 +131,9 @@ function deleteByParent(obj, levels) {
 <#assign params =definition.parameters/>
 <#list params as p>
     <tr>
-    	<td><input type="text" name="parameter.name"/>
-		<input type="text" name="parameter.description"/>
-		<input type="checkbox" value="true" name="parameter.required"/>${p.name}:  </td>
+    	<td><input type="text" name="parameter.name" value="${p.name!}" />
+		<input type="hidden" name="parameter.description" value="${p.description!}" />
+		<input type="checkbox" value="true" name="parameter.required"/>${p.name}: </td>
     	<td>${p.description}</td>
     	<td>${p.required?string!}  <a href="#" onclick="removeParameter(this)" ><@s.text name="label.global.remove"/></a></td>
     </tr>
@@ -123,8 +142,9 @@ function deleteByParent(obj, levels) {
 </table>
 </td></tr>
 </table>
-<input type="submit" class="submit" name="saveAction" value="<@s.text name="label.global.save"/>"/>
+<input type="submit" class="buttonFwd" name="saveAction" value="<@s.text name="label.global.save"/>"/>
 <input type="submit" class="submit" name="cancel" value="<@s.text name="label.cancel"/>"/>
+</fieldset>
 </form>
 <table  style="display: none">
   <tr id="proto" >
